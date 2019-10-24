@@ -49,6 +49,12 @@ void setup() {
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
 
+  digitalWrite(IN1, 0);
+  digitalWrite(IN2, 0);
+  digitalWrite(IN3, 0);
+  digitalWrite(IN4, 0);
+  digitalWrite(ENA, 0);
+  digitalWrite(ENB, 0);
   //校准，获取中间值
   delay(500);
 
@@ -138,26 +144,29 @@ void loop() {
   B_move(speed_b);
   Serial.println(speed_a);
   Serial.println(speed_b);
-  vibrate = ps2x.Analog(PSAB_PAD_UP);//震动
-  vibrate = ps2x.Analog(PSAB_PAD_DOWN);
   static int arm_dir = 1500;   //手臂方向，用右摇杆控制   
   static int arm_joint_0 = 1500;//手臂关节0，用右摇杆控制 
   static int arm_joint_1 = 1500;//手臂关节1，用左前后键控制
+  static int arm_joint_2 = 1500;//手臂关节1，用左前后键控制
   static int arm_claw_0 = 1500;//手臂爪子方向，用左前后键控制
   static int arm_claw_1 = 1500;//手臂爪子开合，用左前后键控制，注意访问800,1600
   if(ps2x.Button(PSB_L2))  arm_claw_0 += 40;
   if(ps2x.Button(PSB_R2))  arm_claw_0 -= 40;
   if(ps2x.Button(PSB_L1))  arm_claw_1 += 40;
   if(ps2x.Button(PSB_R1))  arm_claw_1 -= 40;
+  if(ps2x.Button(PSB_TRIANGLE))  arm_joint_2 += 40;
+  if(ps2x.NewButtonState(PSB_CROSS))  arm_joint_2 -= 40;
   if(ps2x.Button(PSB_PAD_UP))  arm_joint_1 += ps2x.Analog(PSAB_PAD_UP)/5;
   if(ps2x.Button(PSB_PAD_DOWN)) arm_joint_1 -= ps2x.Analog(PSAB_PAD_DOWN)/5;
   arm_joint_0+=(ps2x.Analog(PSS_RY)-127)/10*4;
   arm_dir+=(ps2x.Analog(PSS_RX)-127)/10*4;
-  myse.moveServo(6,lim(arm_dir),1);
   myse.moveServo(1,lim(arm_joint_0),1);
   myse.moveServo(2,lim(arm_claw_0),1);
   myse.moveServo(3,lim(arm_joint_1),1);
   myse.moveServo(4,map(lim(arm_claw_1),400,2600,800,1600),1);
+  myse.moveServo(5,lim(arm_joint_2),1);
+  myse.moveServo(6,lim(arm_dir),1);
+  vibrate = 0;
   //手臂关节2没法控制
 
 
@@ -192,9 +201,11 @@ void loop() {
 
 int lim(int &x) {
    if(x<400) {
+     vibrate = 255;
     x = 400;
    }
   if(x>2600) {
+     vibrate = 255;
     x = 2600;
   }
   return x;
