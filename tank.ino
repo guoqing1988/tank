@@ -21,10 +21,10 @@ byte vibrate = 0;
 
 #define pwm_max 254
 
-#define base_speed_max 120
+#define base_speed_max 110
 #define dir_speed_max 80
 
-#define motor_speed_max 150
+#define motor_speed_max 140
 #define motor_speed_min 20
 
 #define  pwm_mid 127
@@ -117,14 +117,14 @@ void loop() {
     speed_base = map(pwm0_t - pwm_mid, -100 , 100, -base_speed_max , base_speed_max);
   }
 
-  if (pwm1_t - pwm_mid > 80) {
+  if (pwm1_t - pwm_mid > 70) {
     speed_dir = dir_speed_max;
   }
-  else if (pwm1_t - pwm_mid < -80) {
+  else if (pwm1_t - pwm_mid < -70) {
     speed_dir = -dir_speed_max;
   }
   else {
-    speed_dir = map(pwm1_t - pwm_mid, -80 , 80, -dir_speed_max , dir_speed_max);
+    speed_dir = map(pwm1_t - pwm_mid, -70 , 70, -dir_speed_max , dir_speed_max);
   }
 
   speed_a = map(speed_base + speed_dir, -dir_speed_max - base_speed_max, dir_speed_max + base_speed_max, motor_speed_max, -motor_speed_max);
@@ -149,25 +149,24 @@ void loop() {
   static int arm_joint_1 = 1500;//手臂关节1，用左前后键控制
   static int arm_joint_2 = 1500;//手臂关节1，用左前后键控制
   static int arm_claw_0 = 1500;//手臂爪子方向，用左前后键控制
-  static int arm_claw_1 = 1500;//手臂爪子开合，用左前后键控制，注意访问800,1600
-  if(ps2x.Button(PSB_L2))  arm_claw_0 += 40;
-  if(ps2x.Button(PSB_R2))  arm_claw_0 -= 40;
-  if(ps2x.Button(PSB_L1))  arm_claw_1 += 40;
-  if(ps2x.Button(PSB_R1))  arm_claw_1 -= 40;
-  if(ps2x.Button(PSB_TRIANGLE))  arm_joint_2 += 40;
-  if(ps2x.NewButtonState(PSB_CROSS))  arm_joint_2 -= 40;
-  if(ps2x.Button(PSB_PAD_UP))  arm_joint_1 += ps2x.Analog(PSAB_PAD_UP)/5;
-  if(ps2x.Button(PSB_PAD_DOWN)) arm_joint_1 -= ps2x.Analog(PSAB_PAD_DOWN)/5;
-  arm_joint_0+=(ps2x.Analog(PSS_RY)-127)/10*4;
-  arm_dir+=(ps2x.Analog(PSS_RX)-127)/10*4;
+  static int arm_claw_1 = 1500;//手臂爪子开合，用左前后键控制，注意范围860,1595
+  if(ps2x.Button(PSB_L2))  arm_claw_0 += 60;
+  if(ps2x.Button(PSB_R2))  arm_claw_0 -= 60;
+  if(ps2x.Button(PSB_L1))  arm_claw_1 += 60;
+  if(ps2x.Button(PSB_R1))  arm_claw_1 -= 60;
+  if(ps2x.Button(PSB_TRIANGLE))  arm_joint_2 -= 60;
+  if(ps2x.Button(PSB_CROSS))  arm_joint_2 += 60;
+  if(ps2x.Button(PSB_PAD_UP))  arm_joint_1 -= ps2x.Analog(PSAB_PAD_UP)/5;
+  if(ps2x.Button(PSB_PAD_DOWN)) arm_joint_1 += ps2x.Analog(PSAB_PAD_DOWN)/5;
+  arm_joint_0+=(ps2x.Analog(PSS_RY)-127)/10*6;
+  arm_dir-=(ps2x.Analog(PSS_RX)-127)/10*6;
   myse.moveServo(1,lim(arm_joint_0),1);
-  myse.moveServo(2,lim(arm_claw_0),1);
+  myse.moveServo(2,map(lim(arm_claw_1),400,2600,700,2300),1);
   myse.moveServo(3,lim(arm_joint_1),1);
-  myse.moveServo(4,map(lim(arm_claw_1),400,2600,800,1600),1);
+  myse.moveServo(4,map(lim(arm_claw_1),400,2600,860,1595),1);
   myse.moveServo(5,lim(arm_joint_2),1);
   myse.moveServo(6,lim(arm_dir),1);
   vibrate = 0;
-  //手臂关节2没法控制
 
 
 //  Serial.print("arm_dir:");
@@ -201,13 +200,14 @@ void loop() {
 
 int lim(int &x) {
    if(x<400) {
-     vibrate = 255;
+    vibrate = 255;
     x = 400;
    }
   if(x>2600) {
-     vibrate = 255;
+    vibrate = 255;
     x = 2600;
   }
+  else vibrate = 0;
   return x;
 }
 
